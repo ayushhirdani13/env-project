@@ -6,22 +6,32 @@ from langchain_core.vectorstores import VectorStore
 
 
 class ClimateXRetriever(BaseRetriever):
-    vectorstore:VectorStore
-    k:int = 5
-    threshold:float = 0.5
-    namespace:str = "vectors"
+    vectorstore: VectorStore
+    k: int = 5
+    threshold: float = 0.5
+    namespace: str = "vectors"
+    db: str = "chroma_db"
 
-    def _get_relevant_documents(self, query: str, *, run_manager: CallbackManagerForRetrieverRun) -> List[Document]:
+    def _get_relevant_documents(
+        self, query: str, *, run_manager: CallbackManagerForRetrieverRun
+    ) -> List[Document]:
         docs = self.vectorstore.similarity_search_with_score(query=query, k=self.k)
 
         docs = [x for x in docs if x[1] > self.threshold]
 
         results = []
-        for doc, score in docs:
-            doc.metadata['score'] = score
-            doc.metadata['page'] = int(doc.metadata['page'])+1
-            doc.metadata['source'] = doc.metadata['source']+f"#page={doc.metadata['page']}"
+        if self.db == "chroma_db":
+            for doc, score in docs:
+                doc.metadata["score"] = score
+                doc.metadata["page"] = int(doc.metadata["page"]) + 1
+                doc.metadata["source"] = (
+                    doc.metadata["source"] + f"#page={doc.metadata['page']}"
+                )
 
-            results.append(doc)
+                results.append(doc)
+        else:
+            for doc, score in docs:
+                doc.metadata["score"] = score
+                results.append(doc)
 
         return results

@@ -161,3 +161,6 @@ cython_debug/
 
 # Temporary Chroma Database
 chroma_db
+chroma_db_guardian
+
+test.*
